@@ -34,3 +34,27 @@ CELERY_RESULT_BACKEND = BROKER_URL
 MP4HLS_COMMAND = "/home/mediacms.io/bento4/bin/mp4hls"
 
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
+
+USE_OIDC = True
+USE_IDENTITY_PROVIDERS = True
+
+SOCIALACCOUNT_PROVIDERS = {
+    'openid_connect': {
+        'OAUTH_PKCE_ENABLED': True,
+        'APPS': [
+            {
+                'provider_id': 'ietf-dt',
+                'name': 'IETF Datatracker',
+                'client_id': os.getenv('OIDC_CLIENT_ID', ''),
+                'secret': os.getenv('OIDC_CLIENT_SECRET', ''),
+                'settings': {
+                    'server_url': 'https://dt-main.dev.ietf.org/api/openid',
+                    'fetch_userinfo': True,
+                    'oauth_pkce_enabled': True,
+                    'token_auth_method': 'client_secret_basic',
+                    'uid_field': 'sub',
+                },
+            }
+        ],
+    }
+}

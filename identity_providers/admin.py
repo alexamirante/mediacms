@@ -14,6 +14,7 @@ from identity_providers.models import (
     IdentityProviderGroupRole,
     IdentityProviderUserLog,
     LoginOption,
+    OIDCConfiguration,
 )
 from rbac.models import RBACGroup
 from saml_auth.models import SAMLConfiguration
@@ -35,6 +36,13 @@ class IdentityProviderUserLogAdmin(admin.ModelAdmin):
 
 class SAMLConfigurationInline(admin.StackedInline):
     model = SAMLConfiguration
+    extra = 0
+    can_delete = True
+    max_num = 1
+
+
+class OIDCConfigurationInline(admin.StackedInline):
+    model = OIDCConfiguration
     extra = 0
     can_delete = True
     max_num = 1
@@ -142,10 +150,26 @@ class CustomSocialAppAdmin(SocialAppAdmin):
 
         if getattr(settings, 'USE_SAML', False):
             self.inlines.append(SAMLConfigurationInline)
+        if getattr(settings, 'USE_OIDC', False):
+            self.inlines.append(OIDCConfigurationInline)
         self.inlines.append(IdentityProviderGlobalRoleInline)
         self.inlines.append(IdentityProviderGroupRoleInline)
         self.inlines.append(RBACGroupInline)
         self.inlines.append(IdentityProviderCategoryMappingInline)
+
+    def get_inline_instances(self, request, obj=None):
+        inline_instances = super().get_inline_instances(request, obj)
+        if not obj:
+            return inline_instances
+
+        filtered_instances = []
+        for inline in inline_instances:
+            if isinstance(inline, SAMLConfigurationInline) and obj.provider != 'saml':
+                continue
+            if isinstance(inline, OIDCConfigurationInline) and obj.provider != 'openid_connect':
+                continue
+            filtered_instances.append(inline)
+        return filtered_instances
 
     def get_protocol(self, obj):
         return obj.provider
@@ -157,7 +181,7 @@ class CustomSocialAppAdmin(SocialAppAdmin):
         field = super().formfield_for_dbfield(db_field, **kwargs)
         if db_field.name == 'provider':
             field.label = 'Protocol'
-            field.help_text = "The provider type, eg `google`. For SAML providers, make sure this is set to `saml` lowercase."
+            field.help_text = "The provider type, eg `google`. For SAML providers use `saml`, for OpenID Connect use `openid_connect`."
         elif db_field.name == 'name':
             field.label = 'IDP Config Name'
             field.help_text = "This should be a unique name for the provider."

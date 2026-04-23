@@ -143,6 +143,16 @@ ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
 ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
+
+# OIDC providers can be configured via django-allauth using the APPS list below.
+# Keep it empty by default and populate from local settings/environment per deployment.
+SOCIALACCOUNT_PROVIDERS = {
+    "openid_connect": {
+        "OAUTH_PKCE_ENABLED": True,
+        "APPS": [],
+    }
+}
+
 # registration won't be open, might also consider to remove links for register
 USERS_CAN_SELF_REGISTER = True
 
@@ -273,6 +283,7 @@ ADMIN_TOKEN = ""
 
 AUTH_USER_MODEL = "users.User"
 LOGIN_REDIRECT_URL = "/"
+SOCIALACCOUNT_ADAPTER = "identity_providers.adapter.IdentityProviderAccountAdapter"
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
@@ -307,6 +318,7 @@ INSTALLED_APPS = [
     "uploader.apps.UploaderConfig",
     "djcelery_email",
     "drf_yasg",
+    "allauth.socialaccount.providers.openid_connect",
     "allauth.socialaccount.providers.saml",
     "saml_auth.apps.SamlAuthConfig",
     "tinymce",
@@ -553,6 +565,7 @@ DJANGO_ADMIN_URL = "admin/"
 # this are used around a number of places and will need to be well documented!!!
 
 USE_SAML = False
+USE_OIDC = False
 USE_RBAC = False
 USE_IDENTITY_PROVIDERS = False
 JAZZMIN_UI_TWEAKS = {"theme": "flatly"}

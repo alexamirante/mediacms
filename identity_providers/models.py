@@ -123,3 +123,39 @@ class LoginOption(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class OIDCConfiguration(models.Model):
+    social_app = models.ForeignKey(SocialApp, on_delete=models.CASCADE, related_name='oidc_configurations')
+
+    issuer_url = models.URLField(blank=True, null=True, help_text='OIDC issuer URL')
+    uid = models.CharField(max_length=100, default='sub', help_text='Unique user identifier claim')
+    name = models.CharField(max_length=100, blank=True, null=True, help_text='Display name claim')
+    email = models.CharField(max_length=100, blank=True, null=True, help_text='Email claim')
+    groups = models.CharField(max_length=100, blank=True, null=True, help_text='Groups claim')
+    first_name = models.CharField(max_length=100, blank=True, null=True, help_text='First name claim')
+    last_name = models.CharField(max_length=100, blank=True, null=True, help_text='Last name claim')
+    role = models.CharField(max_length=100, blank=True, null=True, help_text='Role claim')
+
+    verified_email = models.BooleanField(default=False, help_text='Mark email as verified')
+    remove_from_groups = models.BooleanField(default=False, help_text='Automatically remove from groups')
+    save_oidc_response_logs = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'OIDC Configuration'
+        verbose_name_plural = 'OIDC Configurations'
+        unique_together = ['social_app', 'issuer_url']
+
+    def __str__(self):
+        return f'OIDC Config for {self.social_app.name}'
+
+    def clean(self):
+        existing_conf = OIDCConfiguration.objects.filter(social_app=self.social_app)
+
+        if self.pk:
+            existing_conf = existing_conf.exclude(pk=self.pk)
+
+        if existing_conf.exists():
+            raise ValidationError({'social_app': 'Cannot create configuration for the same social app because one configuration already exists.'})
+
+        super().clean()
