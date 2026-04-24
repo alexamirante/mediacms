@@ -13,6 +13,7 @@ services:
       ENABLE_CELERY_BEAT: 'no'
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:-}
       ADMIN_USER: 'admin'
       ADMIN_EMAIL: 'admin@localhost'
       # ADMIN_PASSWORD: 'uncomment_and_set_password_here'
@@ -38,6 +39,7 @@ services:
       ENABLE_MIGRATIONS: 'no'
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:-}
     depends_on:
       - migrations
   celery_beat:
@@ -52,6 +54,7 @@ services:
       ENABLE_MIGRATIONS: 'no'
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:-}
     depends_on:
       - redis
   celery_worker:
@@ -67,6 +70,7 @@ services:
       ENABLE_MIGRATIONS: 'no'
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:-}
+      OIDC_REDIRECT_URI: ${OIDC_REDIRECT_URI:-}
     depends_on:
       - migrations
   db:

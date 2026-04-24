@@ -37,6 +37,8 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 USE_OIDC = True
 USE_IDENTITY_PROVIDERS = True
+OIDC_REDIRECT_URI = os.getenv('OIDC_REDIRECT_URI', '')
+OIDC_AUTH_PARAMS = {'redirect_uri': OIDC_REDIRECT_URI} if OIDC_REDIRECT_URI else {}
 
 SOCIALACCOUNT_PROVIDERS = {
     'openid_connect': {
@@ -52,6 +54,7 @@ SOCIALACCOUNT_PROVIDERS = {
                     'fetch_userinfo': True,
                     'oauth_pkce_enabled': True,
                     'token_auth_method': 'client_secret_basic',
+                    'auth_params': OIDC_AUTH_PARAMS,
                     'uid_field': 'sub',
                 },
             }

@@ -146,6 +146,8 @@ ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
 
 # OIDC providers can be configured via django-allauth using the APPS list below.
 # Keep it empty by default and populate from local settings/environment per deployment.
+OIDC_REDIRECT_URI = ""
+
 SOCIALACCOUNT_PROVIDERS = {
     "openid_connect": {
         "OAUTH_PKCE_ENABLED": True,

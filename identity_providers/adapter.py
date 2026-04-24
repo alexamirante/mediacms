@@ -1,9 +1,12 @@
 import base64
 import logging
+import os
 
+from allauth.socialaccount.providers.openid_connect.views import OpenIDConnectOAuth2Adapter
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.socialaccount.models import SocialApp
 from allauth.socialaccount.signals import social_account_updated
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.dispatch import receiver
 
@@ -14,8 +17,27 @@ from rbac.models import RBACGroup, RBACMembership
 class IdentityProviderAccountAdapter(DefaultSocialAccountAdapter):
     """Unified social account adapter for SAML and OIDC providers."""
 
+    class ConfigurableRedirectOIDCAdapter(OpenIDConnectOAuth2Adapter):
+        def get_callback_url(self, request, app):
+            override = getattr(settings, "OIDC_REDIRECT_URI", "") or os.getenv(
+                "OIDC_REDIRECT_URI", ""
+            )
+            if override:
+                return override
+            return super().get_callback_url(request, app)
+
     def is_open_for_signup(self, request, socialaccount):
         return True
+
+    def get_provider(self, request, provider, client_id=None):
+        provider_obj = super().get_provider(request, provider, client_id=client_id)
+        if provider_obj.id == "openid_connect":
+            override = getattr(settings, "OIDC_REDIRECT_URI", "") or os.getenv(
+                "OIDC_REDIRECT_URI", ""
+            )
+            if override:
+                provider_obj.oauth2_adapter_class = self.ConfigurableRedirectOIDCAdapter
+        return provider_obj
 
     def populate_user(self, request, sociallogin, data):
         user = sociallogin.user
