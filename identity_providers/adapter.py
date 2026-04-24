@@ -46,7 +46,19 @@ class IdentityProviderAccountAdapter(DefaultSocialAccountAdapter):
         if sociallogin.account and sociallogin.account.uid:
             user.username = sociallogin.account.uid
 
-        for item in ["name", "first_name", "last_name", "email"]:
+        # Map OIDC standard claims to Django user fields
+        # Support both SAML-style (first_name, last_name) and OIDC-style (given_name, family_name) claims
+        if data.get("given_name"):
+            user.first_name = data["given_name"]
+        elif data.get("first_name"):
+            user.first_name = data["first_name"]
+
+        if data.get("family_name"):
+            user.last_name = data["family_name"]
+        elif data.get("last_name"):
+            user.last_name = data["last_name"]
+
+        for item in ["name", "email"]:
             if data.get(item):
                 setattr(user, item, data[item])
 
@@ -68,10 +80,29 @@ def social_account_updated(sender, request, sociallogin, **kwargs):
 def perform_user_actions(user, social_account, common_fields=None):
     if common_fields:
         fields_to_update = []
-        for item in ["name", "first_name", "last_name", "email"]:
+        
+        # Map OIDC standard claims to Django user fields
+        # Support both SAML-style (first_name, last_name) and OIDC-style (given_name, family_name)
+        if common_fields.get("given_name") and common_fields["given_name"] != user.first_name:
+            user.first_name = common_fields["given_name"]
+            fields_to_update.append("first_name")
+        elif common_fields.get("first_name") and common_fields["first_name"] != user.first_name:
+            user.first_name = common_fields["first_name"]
+            fields_to_update.append("first_name")
+            
+        if common_fields.get("family_name") and common_fields["family_name"] != user.last_name:
+            user.last_name = common_fields["family_name"]
+            fields_to_update.append("last_name")
+        elif common_fields.get("last_name") and common_fields["last_name"] != user.last_name:
+            user.last_name = common_fields["last_name"]
+            fields_to_update.append("last_name")
+        
+        # Handle other standard fields
+        for item in ["name", "email"]:
             if common_fields.get(item) and common_fields[item] != getattr(user, item):
                 setattr(user, item, common_fields[item])
                 fields_to_update.append(item)
+        
         if fields_to_update:
             user.save(update_fields=fields_to_update)
 
