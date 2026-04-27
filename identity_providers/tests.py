@@ -213,3 +213,20 @@ class IETFRolesMappingTests(TestCase):
         handle_oidc_role_mapping(self.user, {"roles": ietf_roles}, self.social_app)
         self.user.refresh_from_db()
         self.assertTrue(self.user.is_manager)
+
+    @override_settings(
+        OIDC_GLOBAL_ROLE_MAPPINGS={"recman:ietf": "advancedUser"},
+        OIDC_CLAIMS_MAPPING={"role": "roles"},
+    )
+    def test_global_mapping_from_settings_works_without_social_app(self):
+        # This mirrors APPS-only setups where no SocialApp DB row exists.
+        no_social_app = None
+        user = User.objects.create_user(
+            username="ietf-no-social-app",
+            email="no-social-app@example.com",
+            password="test-pass",
+            name="No Social App",
+        )
+        handle_oidc_role_mapping(user, {"roles": [["recman", "ietf"]]}, no_social_app)
+        user.refresh_from_db()
+        self.assertTrue(user.advancedUser)

@@ -320,9 +320,6 @@ def handle_saml_role_mapping(user, extra_data, social_app, saml_configuration):
 
 
 def handle_oidc_role_mapping(user, extra_data, social_app, oidc_configuration=None):
-    if not social_app:
-        return False
-
     groups_claim = get_mapped_claim_name("groups", oidc_configuration) or "groups"
     groups = normalize_list(get_claim(extra_data, groups_claim, []))
 
@@ -345,7 +342,7 @@ def handle_oidc_role_mapping(user, extra_data, social_app, oidc_configuration=No
     # Apply ALL matching global role mappings (e.g. "secr:secretariat" → admin).
     # Priority: DB record first, then OIDC_GLOBAL_ROLE_MAPPINGS from settings.
     for candidate in role_candidates:
-        global_role = social_app.global_roles.filter(name=candidate).first()
+        global_role = social_app.global_roles.filter(name=candidate).first() if social_app else None
         if global_role:
             user.set_role_from_mapping(global_role.map_to)
         else:
@@ -358,7 +355,7 @@ def handle_oidc_role_mapping(user, extra_data, social_app, oidc_configuration=No
     rbac_role = "member"
     valid_rbac_roles = {"member", "contributor", "manager"}
     for candidate in role_candidates:
-        group_role = social_app.group_roles.filter(name=candidate).first()
+        group_role = social_app.group_roles.filter(name=candidate).first() if social_app else None
         if group_role and group_role.map_to in valid_rbac_roles:
             rbac_role = group_role.map_to
             break
@@ -371,6 +368,11 @@ def handle_oidc_role_mapping(user, extra_data, social_app, oidc_configuration=No
             break
 
     remove_from_groups = getattr(oidc_configuration, "remove_from_groups", False)
+    if not social_app:
+        # Without a DB-backed SocialApp we can still apply global role mappings,
+        # but RBAC group synchronization cannot run.
+        return True
+
     return sync_rbac_memberships(user, social_app, groups, rbac_role, remove_from_groups=remove_from_groups)
 
 
