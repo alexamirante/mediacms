@@ -8,6 +8,27 @@ from django.urls import reverse
 from identity_providers.models import LoginOption
 
 
+def _get_oidc_login_options_from_settings():
+    providers = getattr(settings, "SOCIALACCOUNT_PROVIDERS", {})
+    oidc_provider = providers.get("openid_connect", {}) if isinstance(providers, dict) else {}
+    apps = oidc_provider.get("APPS", []) if isinstance(oidc_provider, dict) else []
+
+    options = []
+    for app in apps:
+        if not isinstance(app, dict):
+            continue
+        provider_id = app.get("provider_id")
+        if not provider_id:
+            continue
+
+        title = app.get("name") or f"Login through {provider_id}"
+        options.append({
+            "url": f"/accounts/oidc/{provider_id}/login/",
+            "title": title,
+        })
+    return options
+
+
 def saml_metadata(request):
     if not (hasattr(settings, "USE_SAML") and settings.USE_SAML):
         raise Http404
@@ -39,6 +60,18 @@ def custom_login_view(request):
         return redirect(reverse('login_system'))
 
     login_options = []
+    existing_urls = set()
+
     for option in LoginOption.objects.filter(active=True):
+        if option.url in existing_urls:
+            continue
+        existing_urls.add(option.url)
         login_options.append({'url': option.url, 'title': option.title})
+
+    for option in _get_oidc_login_options_from_settings():
+        if option["url"] in existing_urls:
+            continue
+        existing_urls.add(option["url"])
+        login_options.append(option)
+
     return render(request, 'account/custom_login_selector.html', {'login_options': login_options})
