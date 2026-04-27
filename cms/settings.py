@@ -148,6 +148,31 @@ ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
 # Keep it empty by default and populate from local settings/environment per deployment.
 OIDC_REDIRECT_URI = ""
 
+# Optional claim-name overrides for OIDC userinfo payloads.
+# You can override any of these keys in local_settings.py.
+OIDC_CLAIMS_MAPPING = {
+    "uid": "sub",
+    "name": "name",
+    "email": "email",
+    "first_name": "given_name",
+    "last_name": "family_name",
+    "groups": "groups",
+    "role": "role",
+    "picture": "picture",
+}
+
+# Map OIDC role candidates to MediaCMS global roles.
+# Keys: claim value (or "role:group" pair, e.g. "secr:secretariat").
+# Values: one of user | advancedUser | editor | manager | admin
+# Takes effect only when no matching DB record exists in Global Role Mappings.
+OIDC_GLOBAL_ROLE_MAPPINGS = {}
+
+# Map OIDC role candidates to RBAC membership roles.
+# Keys: claim value (or "role:group" pair).
+# Values: one of member | contributor | manager
+# Takes effect only when no matching DB record exists in Group Role Mappings.
+OIDC_GROUP_ROLE_MAPPINGS = {}
+
 SOCIALACCOUNT_PROVIDERS = {
     "openid_connect": {
         "OAUTH_PKCE_ENABLED": True,
