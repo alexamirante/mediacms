@@ -8,6 +8,8 @@
     "node": ">=14.17.0"
   },
   "files": [
+    "dist",
+    "templates",
     "scripts",
     "cli.js"
   ],
