@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "uploader.apps.UploaderConfig",
     "djcelery_email",
     "drf_yasg",
+    "allauth.socialaccount.providers.openid_connect",
     "allauth.socialaccount.providers.saml",
     "saml_auth.apps.SamlAuthConfig",
     "corsheaders",

@@ -143,6 +143,43 @@ ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
 ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
+
+# OIDC providers can be configured via django-allauth using the APPS list below.
+# Keep it empty by default and populate from local settings/environment per deployment.
+OIDC_REDIRECT_URI = ""
+
+# Optional claim-name overrides for OIDC userinfo payloads.
+# You can override any of these keys in local_settings.py.
+OIDC_CLAIMS_MAPPING = {
+    "uid": "sub",
+    "name": "name",
+    "email": "email",
+    "first_name": "given_name",
+    "last_name": "family_name",
+    "groups": "groups",
+    "role": "role",
+    "picture": "picture",
+}
+
+# Map OIDC role candidates to MediaCMS global roles.
+# Keys: claim value (or "role:group" pair, e.g. "secr:secretariat").
+# Values: one of user | advancedUser | editor | manager | admin
+# Takes effect only when no matching DB record exists in Global Role Mappings.
+OIDC_GLOBAL_ROLE_MAPPINGS = {}
+
+# Map OIDC role candidates to RBAC membership roles.
+# Keys: claim value (or "role:group" pair).
+# Values: one of member | contributor | manager
+# Takes effect only when no matching DB record exists in Group Role Mappings.
+OIDC_GROUP_ROLE_MAPPINGS = {}
+
+SOCIALACCOUNT_PROVIDERS = {
+    "openid_connect": {
+        "OAUTH_PKCE_ENABLED": True,
+        "APPS": [],
+    }
+}
+
 # registration won't be open, might also consider to remove links for register
 USERS_CAN_SELF_REGISTER = True
 
@@ -273,6 +310,7 @@ ADMIN_TOKEN = ""
 
 AUTH_USER_MODEL = "users.User"
 LOGIN_REDIRECT_URL = "/"
+SOCIALACCOUNT_ADAPTER = "identity_providers.adapter.IdentityProviderAccountAdapter"
 
 AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
@@ -307,6 +345,7 @@ INSTALLED_APPS = [
     "uploader.apps.UploaderConfig",
     "djcelery_email",
     "drf_yasg",
+    "allauth.socialaccount.providers.openid_connect",
     "allauth.socialaccount.providers.saml",
     "saml_auth.apps.SamlAuthConfig",
     "tinymce",
@@ -553,6 +592,7 @@ DJANGO_ADMIN_URL = "admin/"
 # this are used around a number of places and will need to be well documented!!!
 
 USE_SAML = False
+USE_OIDC = False
 USE_RBAC = False
 USE_IDENTITY_PROVIDERS = False
 JAZZMIN_UI_TWEAKS = {"theme": "flatly"}
